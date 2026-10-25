@@ -3,45 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Тест Земли</title>
+    <title>AR Космос Тест</title>
     
     <script src="https://aframe.io"></script>
     <script src="https://jsdelivr.net"></script>
     
-    <script>
-        AFRAME.registerComponent('mytarget', {
-            init: function () {
-                const video = document.querySelector("#ar-video");
-                this.el.addEventListener('targetFound', event => { video.play(); });
-                this.el.addEventListener('targetLost', event => { video.pause(); });
-            }
-        });
-    </script>
-
     <style>
-        body { margin: 0; overflow: hidden; }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        
+        /* Кнопка первого клика для разблокировки видео на смартфонах */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9); color: white; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #start-btn {
+            background: #2563eb; color: white; border: none; padding: 15px 30px;
+            font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37,99,235,0.4); transition: 0.2s;
+        }
         #instruction {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.6); color: white; padding: 10px 20px;
-            border-radius: 20px; font-family: sans-serif; font-size: 14px; z-index: 999;
+            border-radius: 20px; font-size: 14px; z-index: 999; display: none;
         }
     </style>
+    
+    <script>
+        // Ждем клика пользователя, чтобы активировать плеер
+        window.addEventListener('click', () => {
+            const video = document.querySelector("#ar-video");
+            video.play().then(() => {
+                video.pause(); // Принудительно разблокировали и поставили на паузу до наведения
+            }).catch(err => console.log("Плеер разблокирован"));
+            
+            document.querySelector("#start-overlay").style.display = "none";
+            document.querySelector("#instruction").style.display = "block";
+        }, { once: true });
+
+        // Автозапуск видео при обнаружении картинки-маркера
+        AFRAME.registerComponent('mytarget', {
+            init: function () {
+                const video = document.querySelector("#ar-video");
+                this.el.addEventListener('targetFound', () => { video.play(); });
+                this.el.addEventListener('targetLost', () => { video.pause(); });
+            }
+        });
+    </script>
 </head>
 <body>
 
-    <div id="instruction">Наведите камеру на маркер для запуска планеты</div>
+    <!-- Экран разблокировки -->
+    <div id="start-overlay">
+        <h2 style="margin-bottom: 20px; text-align:center; padding: 0 20px;">Проект Дополненной Реальности</h2>
+        <button id="start-btn">🚀 ЗАПУСТИТЬ AR</button>
+    </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <div id="instruction">Наведите камеру на маркер (картинку)</div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
         <a-assets>
-            <!-- Ссылка на ваше видео в корне репозитория -->
             <video id="ar-video" src="./video.mp4" preload="auto" loop="true" webkit-playsinline playsinline muted crossorigin="anonymous"></video>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         
-            <!-- Идеальные пропорции 16:9 под ваше видео -->
             <a-video src="#ar-video" width="1.77" height="1" position="0 0 0" rotation="0 0 0"></a-video>
         
         
